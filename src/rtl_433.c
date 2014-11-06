@@ -75,8 +75,8 @@
 #include "rtl-sdr.h"
 
 #ifdef USE_PLUGINS
-#include "plugin.h"
-#include "rtl_433_plugin.h"
+#include "plugin/plugin.h"
+#include "plugin/rtl_433_plugin.h"
 #endif
 
 
@@ -1489,7 +1489,7 @@ int main(int argc, char **argv)
     uint32_t out_block_size = DEFAULT_BUF_LENGTH;
     int device_count;
     char vendor[256], product[256], serial[256];
-    char *plugin_path = NULL; // TODO: obtain default path from default installation directories (cmake?)
+    char *plugin_path = DEFAULT_PLUGIN_DIRECTORY; // TODO: obtain default path from default installation directories (cmake?)
 
     demod = malloc(sizeof(struct dm_state));
     memset(demod,0,sizeof(struct dm_state));
@@ -1558,6 +1558,7 @@ int main(int argc, char **argv)
             break;
         case 'P':
             plugin_path = optarg;
+            break;
         default:
             usage();
             break;

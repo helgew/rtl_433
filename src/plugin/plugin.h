@@ -5,6 +5,8 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
+#define VISIBLE __attribute__ ((visibility ("default")))
+
 typedef struct plugin_array_t {
     void **plugins ;
     int  count;
@@ -19,8 +21,9 @@ typedef struct plugin_descriptor_t {
 
 plugin_array *pm_discover_plugins( const char* dirname, plugin_array *plugins );
 
-void pm_show_plugins(  plugin_array *plugins );
 
-void pm_show_plugin (  plugin_descriptor  *plugin );
+VISIBLE void pm_show_plugins(  plugin_array *plugins );
+
+VISIBLE void pm_show_plugin (  plugin_descriptor  *plugin );
 
 #endif

@@ -24,7 +24,9 @@ static int rubicson_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]);
 
 // TODO: Better solution for .id */
 // TODO Rubicson callback has multiple r_device entries tech_line_fws_500
-r_device rubicson = {
+
+r_device devices[] = { 
+  {
     /* .id             = */ 1,
     /* .name           = */ "Rubicson Temperature Sensor",
     /* .modulation     = */ OOK_PWM_D,
@@ -32,11 +34,20 @@ r_device rubicson = {
     /* .long_limit     = */ 3500/4,
     /* .reset_limit    = */ 5000/4,
     /* .json_callback  = */ &rubicson_callback,
-};
+  },
+  {
+    /* .id             = */ 4,
+    /* .name           = */ "Tech Line FWS-500 Sensor",
+    /* .modulation     = */ OOK_PWM_D,
+    /* .short_limit    = */ 3500/4,
+    /* .long_limit     = */ 7000/4,
+    /* .reset_limit    = */ 15000/4,
+    /* .json_callback  = */ &rubicson_callback,
+  }
+}; 
 
-
-rtl_433_plugin_t plugin =
-{
+rtl_433_plugin_t plugin[] = {
+  {
     .plugin_desc = {
         .application = "rtl_433",
         .type        = "environment.temperature",
@@ -44,13 +55,24 @@ rtl_433_plugin_t plugin =
         .version     = 1
     },
     .callback_p = rubicson_callback,
-    .r_device_p = &rubicson
+    .r_device_p = &(devices[0])
+  },
+  {
+    .plugin_desc = {
+        .application = "rtl_433",
+        .type        = "environment.temperature",
+        .model       = "Tech Line FWS-500 Sensor",
+        .version     = 1
+    },
+    .callback_p = rubicson_callback,
+    .r_device_p = &(devices[1])
+  }
 };
 
-__attribute__ ((visibility ("default")))
-extern void *get_plugin()
+VISIBLE extern void *get_plugin()
 {
-    return &plugin;
+    // TODO: return each record in order
+    return &(plugin[1]);
 }
 static int rubicson_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     int temperature_before_dec;
@@ -58,12 +80,13 @@ static int rubicson_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     int16_t temp;
 
 
-// TODO remove
+// TODO remove, not valid for multiple plugins with 1 callback
+    
     fprintf(stderr, "App: %s, type: %s, model: %s, version: %d\n",
-        plugin.plugin_desc.application,
-        plugin.plugin_desc.type,
-        plugin.plugin_desc.model,
-        plugin.plugin_desc.version );
+        plugin[1].plugin_desc.application,
+        plugin[1].plugin_desc.type,
+        plugin[1].plugin_desc.model,
+        plugin[1].plugin_desc.version );
 
     /* FIXME validate the received message better, figure out crc */
     if (bb[1][0] == bb[2][0] && bb[2][0] == bb[3][0] && bb[3][0] == bb[4][0] &&

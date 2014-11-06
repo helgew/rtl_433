@@ -7,6 +7,9 @@
 #define BITBUF_COLS             34
 #define BITBUF_ROWS             50
 
+#define DEFAULT_APP_DIRECTORY      "/usr/local"
+#define DEFAULT_PLUGIN_DIRECTORY   DEFAULT_APP_DIRECTORY "/lib/plugin"
+
 /* Supported modulation types */
 #define     OOK_PWM_D   1   /* Pulses are of the same length, the distance varies */
 #define     OOK_PWM_P   2   /* The length of the pulses varies */

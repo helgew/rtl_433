@@ -27,16 +27,12 @@ add_library(rtlsdr_shared SHARED
     tuner_fc0013.c
     tuner_fc2580.c
     tuner_r820t.c
-    plugin.c
+    plugin/plugin.c
 )
 
 set(CMAKE_EXE_LINKER_FLAGS "-rdynamic")
 
 add_definitions(-DUSE_PLUGINS )
-
-add_library(silvercrest_plugin SHARED  silvercrest_plugin.c)
-add_library(rubicson_plugin    SHARED  rubicson_plugin.c)
-add_library(auriol_plugin      SHARED  auriol_plugin.c)
 
 target_link_libraries(rtlsdr_shared
     ${LIBUSB_LIBRARIES}
@@ -53,8 +49,10 @@ add_library(rtlsdr_static STATIC
     tuner_fc0013.c
     tuner_fc2580.c
     tuner_r820t.c
-    plugin.c
+    plugin/plugin.c
 )
+
+add_subdirectory(plugin)
 
 if(WIN32)
 add_library(libgetopt_static STATIC
@@ -82,7 +80,7 @@ add_executable(rtl_test rtl_test.c)
 add_executable(rtl_fm rtl_fm.c)
 add_executable(rtl_eeprom rtl_eeprom.c)
 add_executable(rtl_adsb rtl_adsb.c)
-add_executable(rtl_433 rtl_433.c plugin.c)
+add_executable(rtl_433 rtl_433.c)
 set(INSTALL_TARGETS rtlsdr_shared rtlsdr_static rtl_sdr rtl_tcp rtl_test rtl_fm rtl_eeprom rtl_adsb rtl_433)
 
 target_link_libraries(rtl_sdr rtlsdr_shared

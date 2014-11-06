@@ -35,7 +35,7 @@ static void *load_plugin( const char *plugin_name, const char *plugin_path );
 //! param plugins       pointer to a an (allocced) array of plugin's found already (NULL if no plugins found yet)
 //! return              pointer to a an array of plugin's found (NULL if no plugins found yet)
 
-plugin_array *pm_discover_plugins( const char* dirname, plugin_array *plugins )
+VISIBLE plugin_array *pm_discover_plugins( const char* dirname, plugin_array *plugins )
 {
     char *full_path = NULL;
     struct dirent* direntry = NULL;
