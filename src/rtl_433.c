@@ -74,6 +74,12 @@
 
 #include "rtl-sdr.h"
 
+#ifdef USE_PLUGINS
+#include "plugin.h"
+#include "rtl_433_plugin.h"
+#endif
+
+
 #define DEFAULT_SAMPLE_RATE     250000
 #define DEFAULT_FREQUENCY       433920000
 #define DEFAULT_HOP_TIME        (60*10)
@@ -103,11 +109,17 @@ static int debug_output = 0;
 static int override_short = 0;
 static int override_long = 0;
 
+
+#ifndef USE_PLUGINS
+
+// The below is moved to rtl_plugin.h and can be removed once all platforms work OK
+
 /* Supported modulation types */
 #define     OOK_PWM_D   1   /* Pulses are of the same length, the distance varies */
 #define     OOK_PWM_P   2   /* The length of the pulses varies */
 
 
+// Also  Moved to rtl_433_plugin.h
 typedef struct {
     unsigned int    id;
     char            name[256];
@@ -117,6 +129,7 @@ typedef struct {
     unsigned int    reset_limit;
     int     (*json_callback)(uint8_t bits_buffer[BITBUF_ROWS][BITBUF_COLS]) ;
 } r_device;
+#endif
 
 static int debug_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     int i,j,k;
@@ -143,6 +156,7 @@ static int debug_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     return 0;
 }
 
+#ifndef USE_PLUGINS
 static int silvercrest_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     /* FIXME validate the received message better */
     if (bb[1][0] == 0xF8 &&
@@ -543,7 +557,7 @@ static int acurite5n1_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
                 acurite_getWindSpeed(buf[3], buf[4]));          
             fprintf(stderr, "temp: %2.1f° F, ", 
                 acurite_getTemp(buf[4], buf[5]));
-            fprintf(stderr, "humidity: %d% RH\n", 
+            fprintf(stderr, "humidity: %d\%% RH\n", 
                 acurite_getHumidity(buf[6]));
         }
     }
@@ -554,6 +568,8 @@ static int acurite5n1_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 
 
 // timings based on samp_rate=1024000
+
+// TODO: Meerdere devices met 1 callback en verschillende limit paramaters !!!???
 r_device rubicson = {
     /* .id             = */ 1,
     /* .name           = */ "Rubicson Temperature Sensor",
@@ -591,7 +607,7 @@ r_device tech_line_fws_500 = {
     /* .short_limit    = */ 3500/4,
     /* .long_limit     = */ 7000/4,
     /* .reset_limit    = */ 15000/4,
-    // /* .json_callback  = */ &rubicson_callback,
+    /* .json_callback  = */ &rubicson_callback,
 };
 
 r_device generic_hx2262 = {
@@ -601,7 +617,7 @@ r_device generic_hx2262 = {
     /* .short_limit    = */ 1300/4,
     /* .long_limit     = */ 10000/4,
     /* .reset_limit    = */ 40000/4,
-    // /* .json_callback  = */ &silvercrest_callback,
+    /* .json_callback  = */ &silvercrest_callback,
 };
 
 r_device technoline_ws9118 = {
@@ -664,6 +680,8 @@ r_device acurite5n1 = {
     /* .reset_limit    = */ 20000,
     /* .json_callback  = */ &acurite5n1_callback,
 };
+
+#endif // USE_PLUGINS
 
 struct protocol_state {
     int (*callback)(uint8_t bits_buffer[BITBUF_ROWS][BITBUF_COLS]);
@@ -739,6 +757,7 @@ void usage(void)
         "\t[-D print debug info on event\n"
         "\t[-z override short value\n"
         "\t[-x override long value\n"
+        "\t[-P plugin_path path to plugin directory\n"
         "\tfilename (a '-' dumps samples to stdout)\n\n", DEFAULT_LEVEL_LIMIT, DEFAULT_FREQUENCY, DEFAULT_SAMPLE_RATE);
     exit(1);
 }
@@ -1400,6 +1419,10 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
                     default:
                         fprintf(stderr, "Unknown modulation %d in protocol!\n", demod->r_devs[i]->modulation);
                 }
+#ifdef USE_PLUGINS
+                if (debug_output)
+                    debug_callback(demod->f_buf);
+#endif
             }
         }
 
@@ -1426,6 +1449,26 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
     }
 }
 
+#ifdef USE_PLUGINS
+static void register_plugins( struct dm_state* demod, char *plugin_path )
+{
+    int i;
+
+    fprintf(stderr, "Registering protocol plugins\n");
+    plugin_array *rtl_plugins;
+    rtl_433_plugin_t *rtl_433_plugin;
+
+    rtl_plugins = (plugin_array*) pm_discover_plugins( plugin_path, NULL );
+    for ( i = 0; i < rtl_plugins->count; i++ )
+    {
+        rtl_433_plugin_t* rtl_433_plugin = rtl_plugins->plugins[i];
+        register_protocol(demod, rtl_433_plugin->r_device_p );
+        pm_show_plugin( (plugin_descriptor *)rtl_433_plugin );
+    }
+    fprintf(stderr, "Registered %d protocol plugins\n", i);
+}
+#endif // USE_PLUGINS
+
 int main(int argc, char **argv)
 {
 #ifndef _WIN32
@@ -1446,6 +1489,7 @@ int main(int argc, char **argv)
     uint32_t out_block_size = DEFAULT_BUF_LENGTH;
     int device_count;
     char vendor[256], product[256], serial[256];
+    char *plugin_path = NULL; // TODO: obtain default path from default installation directories (cmake?)
 
     demod = malloc(sizeof(struct dm_state));
     memset(demod,0,sizeof(struct dm_state));
@@ -1458,7 +1502,7 @@ int main(int argc, char **argv)
     demod->level_limit      = DEFAULT_LEVEL_LIMIT;
 
 
-    while ((opt = getopt(argc, argv, "x:z:p:Dtam:r:c:l:d:f:g:s:b:n:S::")) != -1) {
+    while ((opt = getopt(argc, argv, "x:z:p:Dtam:r:c:l:d:f:g:s:b:n:S:P::")) != -1) {
         switch (opt) {
         case 'd':
             dev_index = atoi(optarg);
@@ -1512,12 +1556,15 @@ int main(int argc, char **argv)
         case 'x':
             override_long = atoi(optarg);
             break;
+        case 'P':
+            plugin_path = optarg;
         default:
             usage();
             break;
         }
     }
 
+#ifndef USE_PLUGINS
     /* init protocols somewhat ok */
     register_protocol(demod, &rubicson);
     register_protocol(demod, &prologue);
@@ -1529,6 +1576,9 @@ int main(int argc, char **argv)
     register_protocol(demod, &waveman);
     register_protocol(demod, &steffen);
     register_protocol(demod, &acurite5n1);
+#else
+    register_plugins( demod, plugin_path );
+#endif // USE_PLUGINS
 
     if (argc <= optind-1) {
         usage();

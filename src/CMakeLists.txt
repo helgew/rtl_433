@@ -27,7 +27,16 @@ add_library(rtlsdr_shared SHARED
     tuner_fc0013.c
     tuner_fc2580.c
     tuner_r820t.c
+    plugin.c
 )
+
+set(CMAKE_EXE_LINKER_FLAGS "-rdynamic")
+
+add_definitions(-DUSE_PLUGINS )
+
+add_library(silvercrest_plugin SHARED  silvercrest_plugin.c)
+add_library(rubicson_plugin    SHARED  rubicson_plugin.c)
+add_library(auriol_plugin      SHARED  auriol_plugin.c)
 
 target_link_libraries(rtlsdr_shared
     ${LIBUSB_LIBRARIES}
@@ -44,6 +53,7 @@ add_library(rtlsdr_static STATIC
     tuner_fc0013.c
     tuner_fc2580.c
     tuner_r820t.c
+    plugin.c
 )
 
 if(WIN32)
@@ -72,40 +82,47 @@ add_executable(rtl_test rtl_test.c)
 add_executable(rtl_fm rtl_fm.c)
 add_executable(rtl_eeprom rtl_eeprom.c)
 add_executable(rtl_adsb rtl_adsb.c)
-add_executable(rtl_433 rtl_433.c)
+add_executable(rtl_433 rtl_433.c plugin.c)
 set(INSTALL_TARGETS rtlsdr_shared rtlsdr_static rtl_sdr rtl_tcp rtl_test rtl_fm rtl_eeprom rtl_adsb rtl_433)
 
 target_link_libraries(rtl_sdr rtlsdr_shared
     ${LIBUSB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
 )
 target_link_libraries(rtl_tcp rtlsdr_shared
     ${LIBUSB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
 )
 target_link_libraries(rtl_test rtlsdr_shared
     ${LIBUSB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
 )
 target_link_libraries(rtl_fm rtlsdr_shared
     ${LIBUSB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
 )
 target_link_libraries(rtl_433 rtlsdr_shared
     ${LIBUSB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
 )
 target_link_libraries(rtl_eeprom rtlsdr_shared
     ${LIBUSB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
 )
 target_link_libraries(rtl_adsb rtlsdr_shared
     ${LIBUSB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
 )
 if(UNIX)
 target_link_libraries(rtl_fm m)
-target_link_libraries(rtl_433 m)
+target_link_libraries(rtl_433 m dl)
 target_link_libraries(rtl_adsb m)
 if(APPLE)
     target_link_libraries(rtl_test m)
