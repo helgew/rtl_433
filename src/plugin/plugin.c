@@ -25,7 +25,7 @@
 typedef void* (*PluginInitFunc)();
 
 
-static void *load_plugin( const char *plugin_name, const char *plugin_path );
+int load_plugins ( const char *plugin_name, const char *plugin_path, plugin_array *plugins );
 
 //
 // TODO: add 'type' (regex) string so that only plugin's of required type
@@ -78,15 +78,9 @@ VISIBLE plugin_array *pm_discover_plugins( const char* dirname, plugin_array *pl
         size_t max_size = (strlen(dirname)+strlen(name)+2);
         full_path = realloc( full_path, max_size );
         snprintf( full_path, max_size, "%s/%s", dirname, name );
-        fprintf ( stderr, "Loading plugin '%s' from '%s' \n", name, full_path ) ;
+        fprintf ( stderr, "Loading plugins from '%s' \n", full_path ) ;
         /* TODO: store returned plugin in admin */
-        void *last_plugin = load_plugin( name, full_path );
-        if (last_plugin)
-        {
-            plugins->count++;
-            plugins->plugins = realloc(plugins->plugins, (plugins->count * sizeof(void*)));
-            plugins->plugins[plugins->count-1] = last_plugin;
-        }
+        int nr_plugins = load_plugins( name, full_path, plugins );
     }
     if ( dir ) closedir( dir );
     if ( full_path ) free( full_path );
@@ -114,38 +108,49 @@ void pm_show_plugin (  plugin_descriptor  *plugin )
 }
 //! param plugin_name   char pointer containing the name of the plugin
 //! param plugin_path   char pointer containing the path where the plugin to be loaded can be found
-//! return              a pointer to a plugin_handle for the plugin
-static void *load_plugin( const char *plugin_name, const char *plugin_path )
-{
-    PluginInitFunc mainfunc;
-    void *plugin;
+//! param plugins       pointer to a plugin array to which to add the plugins in the plugin library file
+//! return              the number of plugins added to the plugin array
+int load_plugins( const char *plugin_name, const char *plugin_path, plugin_array *plugins )
+{ 
+    int nr_plugins=0;
+    PluginInitFunc get_plugin_func = NULL;
+    plugin_descriptor *plugin = NULL;
 
     void* libhandle = dlopen( plugin_path, RTLD_LAZY );
     if ( ! libhandle )
     {
         fprintf ( stderr, "Can not open plugin '%s' at '%s' (cause: %s)\n",
             plugin_name, plugin_path, dlerror() );
+        return 0;
     }
-    else
+
+    // printf ( "dlopen plugin '%s' at '%s'\n", plugin_name, plugin_path );
+    get_plugin_func = (PluginInitFunc)dlsym(libhandle, "get_plugin");
+
+    if ( ! get_plugin_func ) {
+        fprintf( stderr, "Error loading 'get_plugin' function from %s: %s\n", plugin_path, dlerror());
+        dlclose(libhandle);
+        return 0;
+    }
+
+    while ( (plugin = get_plugin_func()) )
     {
-        printf ( "dlopen plugin '%s' at '%s'\n", plugin_name, plugin_path );
-        mainfunc = (PluginInitFunc)dlsym(libhandle, "get_plugin");
-    }
-    if (!mainfunc) {
-        printf("Error loading init function: %s\n", dlerror());
-        dlclose(libhandle);
-        return NULL;
+        nr_plugins++;
+        plugins->count++;
+        plugins->plugins = realloc(plugins->plugins, (plugins->count * sizeof(void*)));
+        plugins->plugins[plugins->count-1] = plugin;
+        fprintf( stderr, "Loading plugin %s\n", plugin->model );
     }
 
-    plugin = mainfunc();
-    if (plugin == NULL) {
-        printf("Error: Plugin init function returned NULL\n");
+    if ( (nr_plugins == 0) ) {
+        printf("Error: No plugins returned by get_plugin for %s\n", plugin_path);
         dlclose(libhandle);
-        return NULL;
+        return 0;
     }
 
-    printf("Loaded plugin from: '%s'\n", plugin_path);
-    return plugin;
+    // TODO: make this a debug statement
+    printf("Loaded %d plugin from: '%s'\n", nr_plugins, plugin_path);
+    return nr_plugins;
 
 }
 

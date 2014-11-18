@@ -54,7 +54,14 @@ rtl_433_plugin_t plugin =
 
 VISIBLE extern void *get_plugin()
 {
-    return &plugin;
+    static int returned = 0;
+    if ( returned == 0)
+    {
+        returned = 1;
+        return &plugin;
+    }
+    return NULL;
+
 }
 void printbytebits( uint8_t byte)
 {
@@ -89,12 +96,17 @@ static int x10_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
         fprintf(stderr, "\nbyte2: ");
         printbytebits( byte2 );
         fprintf(stderr, "\n");
-        fprintf(stderr, "byte2 & 0x7 %x, byte2 %x\n", byte2 & 0x7, byte2);
-        if ( (byte2 & 0x7) == 0x0 ) {
-            fprintf(stderr, "on\n");
-        }
-        else if ( (byte2 & 0x7)  == 0x4 ) {
+        if ( (byte2 & 0b00100000) ) {
             fprintf(stderr, "off\n");
+        }
+        else if( (byte2 == 0b10001000) ) {
+            fprintf(stderr, "bright\n");
+        }
+        else if( (byte2 == 0b10011000) ) {
+            fprintf(stderr, "dim\n");
+        }
+        else {
+            fprintf(stderr, "on\n");
         }
         return 1;
     }

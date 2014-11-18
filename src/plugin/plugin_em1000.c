@@ -50,7 +50,14 @@ rtl_433_plugin_t plugin =
 
 VISIBLE extern void *get_plugin()
 {
-    return &plugin;
+    static int returned = 0;
+    if ( returned == 0)
+    {
+        returned = 1;
+        return &plugin;
+    }
+    return NULL;
+
 }
 
 uint16_t AD_POP(uint8_t bb[BITBUF_COLS], uint8_t bits, uint8_t bit) {

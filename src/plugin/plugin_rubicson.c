@@ -69,14 +69,20 @@ rtl_433_plugin_t plugin[] = {
 
 VISIBLE extern void *get_plugin()
 {
+    static int cnt = 0;
     // TODO: return each record in order
-    return &(plugin[1]);
+    if ( cnt < 2 )
+    {
+        return &(plugin[cnt++]);
+    }
+    return NULL;
 }
+
+
 static int rubicson_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     int temperature_before_dec;
     int temperature_after_dec;
     int16_t temp;
-
 
 // TODO remove, not valid for multiple plugins with 1 callback
     

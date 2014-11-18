@@ -57,7 +57,14 @@ rtl_433_plugin_t plugin =
 
 VISIBLE extern void *get_plugin()
 {
-    return &plugin;
+    static int returned = 0;
+    if ( returned == 0)
+    {
+        returned = 1;
+        return &plugin;
+    }
+    return NULL;
+
 }
 static int silvercrest_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 
