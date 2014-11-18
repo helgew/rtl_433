@@ -54,7 +54,6 @@ rtl_433_plugin_t plugin[] = {
         .model       = "Rubicson Temperature Sensor",
         .version     = 1
     },
-    .callback_p = rubicson_callback,
     .r_device_p = &(devices[0])
   },
   {
@@ -64,7 +63,6 @@ rtl_433_plugin_t plugin[] = {
         .model       = "Tech Line FWS-500 Sensor",
         .version     = 1
     },
-    .callback_p = rubicson_callback,
     .r_device_p = &(devices[1])
   }
 };
@@ -82,7 +80,7 @@ static int rubicson_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 
 // TODO remove, not valid for multiple plugins with 1 callback
     
-    fprintf(stderr, "App: %s, type: %s, model: %s, version: %d\n",
+    fprintf(stderr, "Called callback plugin for App: %s, type: %s, model: %s, version: %d\n",
         plugin[1].plugin_desc.application,
         plugin[1].plugin_desc.type,
         plugin[1].plugin_desc.model,

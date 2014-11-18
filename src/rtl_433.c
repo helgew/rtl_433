@@ -80,7 +80,9 @@
 #endif
 
 
+// TODO: revert
 #define DEFAULT_SAMPLE_RATE     250000
+//#define DEFAULT_SAMPLE_RATE     1000000
 #define DEFAULT_FREQUENCY       433920000
 #define DEFAULT_HOP_TIME        (60*10)
 #define DEFAULT_HOP_EVENTS      2
@@ -157,6 +159,7 @@ static int debug_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 }
 
 #ifndef USE_PLUGINS
+/* DONE */
 static int silvercrest_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     /* FIXME validate the received message better */
     if (bb[1][0] == 0xF8 &&
@@ -180,6 +183,7 @@ static int silvercrest_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     return 0;
 }
 
+/* DONE */
 static int rubicson_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     int temperature_before_dec;
     int temperature_after_dec;
@@ -212,6 +216,7 @@ static int rubicson_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     return 0;
 }
 
+/* DONE */
 static int prologue_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     int rid;
 
@@ -247,6 +252,7 @@ static int prologue_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     return 0;
 }
 
+/* DONE */
 static int waveman_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     /* Two bits map to 2 states, 0 1 -> 0 and 1 1 -> 1 */
     int i;
@@ -276,6 +282,7 @@ static int waveman_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     return 0;
 }
 
+/* DONE */
 static int steffen_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 
     if (bb[0][0]==0x00 && ((bb[1][0]&0x07)==0x07) && bb[1][0]==bb[2][0] && bb[2][0]==bb[3][0]) {
@@ -312,6 +319,7 @@ static int steffen_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 }
 
 
+/* Used in em1000 and ws2000 */
 uint16_t AD_POP(uint8_t bb[BITBUF_COLS], uint8_t bits, uint8_t bit) {
     uint16_t val = 0;
     uint8_t i, byte_no, bit_no;
@@ -323,6 +331,7 @@ uint16_t AD_POP(uint8_t bb[BITBUF_COLS], uint8_t bits, uint8_t bit) {
     return val;
 }
 
+/* DONE */
 static int em1000_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     // based on fs20.c
     uint8_t dec[10];
@@ -376,6 +385,7 @@ static int em1000_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     return 1;
 }
 
+/* DONE */
 static int ws2000_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     // based on http://www.dc3yc.privat.t-online.de/protocol.htm
     uint8_t dec[13];
@@ -570,6 +580,8 @@ static int acurite5n1_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 // timings based on samp_rate=1024000
 
 // TODO: Meerdere devices met 1 callback en verschillende limit paramaters !!!???
+/* Note: added X10 and Auriol callbacks in plugins */
+/* DONE */
 r_device rubicson = {
     /* .id             = */ 1,
     /* .name           = */ "Rubicson Temperature Sensor",
@@ -580,6 +592,7 @@ r_device rubicson = {
     /* .json_callback  = */ &rubicson_callback,
 };
 
+/* DONE */
 r_device prologue = {
     /* .id             = */ 2,
     /* .name           = */ "Prologue Temperature Sensor",
@@ -590,6 +603,7 @@ r_device prologue = {
     /* .json_callback  = */ &prologue_callback,
 };
 
+/* DONE */
 r_device silvercrest = {
     /* .id             = */ 3,
     /* .name           = */ "Silvercrest Remote Control",
@@ -600,6 +614,7 @@ r_device silvercrest = {
     /* .json_callback  = */ &silvercrest_callback,
 };
 
+/* TODO: return by get_plugin, alongside rubicson */
 r_device tech_line_fws_500 = {
     /* .id             = */ 4,
     /* .name           = */ "Tech Line FWS-500 Sensor",
@@ -610,6 +625,7 @@ r_device tech_line_fws_500 = {
     /* .json_callback  = */ &rubicson_callback,
 };
 
+/* TODO: return by get_plugin, alongside silvercrest */
 r_device generic_hx2262 = {
     /* .id             = */ 5,
     /* .name           = */ "Window/Door sensor",
@@ -620,6 +636,7 @@ r_device generic_hx2262 = {
     /* .json_callback  = */ &silvercrest_callback,
 };
 
+/* Not done */
 r_device technoline_ws9118 = {
     /* .id             = */ 6,
     /* .name           = */ "Technoline WS9118",
@@ -631,6 +648,7 @@ r_device technoline_ws9118 = {
 };
 
 
+/* DONE */
 r_device elv_em1000 = {
     /* .id             = */ 7,
     /* .name           = */ "ELV EM 1000",
@@ -641,6 +659,7 @@ r_device elv_em1000 = {
     /* .json_callback  = */ &em1000_callback,
 };
 
+/* DONE */
 r_device elv_ws2000 = {
     /* .id             = */ 8,
     /* .name           = */ "ELV WS 2000",
@@ -651,6 +670,7 @@ r_device elv_ws2000 = {
     /* .json_callback  = */ &ws2000_callback,
 };
 
+/* DONE */
 r_device waveman = {
     /* .id             = */ 6,
     /* .name           = */ "Waveman Switch Transmitter",
@@ -661,6 +681,7 @@ r_device waveman = {
     /* .json_callback  = */ &waveman_callback,
 };
 
+/* DONE */
 r_device steffen = {
     /* .id             = */ 9,
     /* .name           = */ "Steffen Switch Transmitter",
@@ -883,6 +904,9 @@ static void register_protocol(struct dm_state *demod, r_device *t_dev) {
     demod->r_dev_num++;
 
     fprintf(stderr, "Registering protocol[%02d] %s\n",demod->r_dev_num, t_dev->name);
+    //if ( debug_output ) {
+        fprintf(stderr, "short: %d, long: %d, reset: %d\n", t_dev->short_limit, t_dev->long_limit, t_dev->reset_limit );
+    //}
 
     if (demod->r_dev_num > MAX_PROTOCOLS)
         fprintf(stderr, "Max number of protocols reached %d\n",MAX_PROTOCOLS);
@@ -1231,30 +1255,33 @@ static void pwm_d_decode(struct dm_state *demod, struct protocol_state* p, int16
     unsigned int i;
 
     for (i=0 ; i<len ; i++) {
-        if (buf[i] > demod->level_limit) {
+        if (buf[i] > demod->level_limit) { // We're in a pulse and a packet is started?
             p->pulse_count = 1;
             p->start_c = 1;
         }
-        if (p->pulse_count && (buf[i] < demod->level_limit)) {
+        if (p->pulse_count && (buf[i] < demod->level_limit)) { // end pulse, start the inter-pulse width distance
             p->pulse_length = 0;
             p->pulse_distance = 1;
             p->sample_counter = 0;
             p->pulse_count = 0;
         }
-        if (p->start_c) p->sample_counter++;
-        if (p->pulse_distance && (buf[i] > demod->level_limit)) {
+        if (p->start_c) p->sample_counter++; // samples within a packet ?
+        if (p->pulse_distance && (buf[i] > demod->level_limit)) { // end of inter-pulse pause
             if (p->sample_counter < p->short_limit) {
+//printf("d0: %d\n", p->sample_counter);
                 demod_add_bit(p, 0);
             } else if (p->sample_counter < p->long_limit) {
                 demod_add_bit(p, 1);
+//printf("d1: %d\n", p->sample_counter);
             } else {
+//printf("dn: %d\n", p->sample_counter);
                 demod_next_bits_packet(p);
                 p->pulse_count    = 0;
                 p->sample_counter = 0;
             }
             p->pulse_distance = 0;
         }
-        if (p->sample_counter > p->reset_limit) {
+        if (p->sample_counter > p->reset_limit) { // end of packet
             p->start_c    = 0;
             p->sample_counter = 0;
             p->pulse_distance = 0;
@@ -1567,17 +1594,20 @@ int main(int argc, char **argv)
 
 #ifndef USE_PLUGINS
     /* init protocols somewhat ok */
-    register_protocol(demod, &rubicson);
-    register_protocol(demod, &prologue);
-    register_protocol(demod, &silvercrest);
-//    register_protocol(demod, &generic_hx2262);
-//    register_protocol(demod, &technoline_ws9118);
-    register_protocol(demod, &elv_em1000);
-    register_protocol(demod, &elv_ws2000);
-    register_protocol(demod, &waveman);
-    register_protocol(demod, &steffen);
+    register_protocol(demod, &rubicson); /* DONE */
+    register_protocol(demod, &prologue); /* DONE */
+    register_protocol(demod, &silvercrest); /* DONE */
+//    register_protocol(demod, &generic_hx2262); /* TODO */
+//    register_protocol(demod, &technoline_ws9118); /* TODO */
+    register_protocol(demod, &elv_em1000); /* DONE */
+    register_protocol(demod, &elv_ws2000); /* DONE */
+    register_protocol(demod, &waveman); /* DONE */
+    register_protocol(demod, &steffen); /* DONE */
     register_protocol(demod, &acurite5n1);
 #else
+    // In case we use plugins register_plugins will register all plugins that
+    // are found in the plugin_path, the end user can determine which plugins
+    // to load by adding or removing plugins to the path
     register_plugins( demod, plugin_path );
 #endif // USE_PLUGINS
 

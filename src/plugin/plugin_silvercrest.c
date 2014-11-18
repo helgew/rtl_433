@@ -32,6 +32,17 @@ r_device silvercrest = {
     /* .json_callback  = */ &silvercrest_callback,
 };
 
+/* TODO: Add generic_hx2262 */
+r_device generic_hx2262 = {
+    /* .id             = */ 5,
+    /* .name           = */ "Window/Door sensor",
+    /* .modulation     = */ OOK_PWM_P,
+    /* .short_limit    = */ 1300/4,
+    /* .long_limit     = */ 10000/4,
+    /* .reset_limit    = */ 40000/4,
+    /* .json_callback  = */ &silvercrest_callback,
+};
+
 rtl_433_plugin_t plugin =
 {
     .plugin_desc = {
@@ -40,12 +51,11 @@ rtl_433_plugin_t plugin =
         .model       = "Silvervrest Remote",
         .version     = 1
     },
-    .callback_p = silvercrest_callback,
     .r_device_p = &silvercrest
 };
 
-__attribute__ ((visibility ("default")))
-extern void *get_plugin()
+
+VISIBLE extern void *get_plugin()
 {
     return &plugin;
 }

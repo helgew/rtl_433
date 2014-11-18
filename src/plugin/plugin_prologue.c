@@ -60,7 +60,7 @@ rtl_433_plugin_t plugin =
 {
     .plugin_desc = {
         .application = "rtl_433",
-        .type        = "weather.*",
+        .type        = "environment.weather.*",
         .model       = "several",
         .version     = 1
     },

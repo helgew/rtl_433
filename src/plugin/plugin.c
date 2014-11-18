@@ -42,11 +42,11 @@ VISIBLE plugin_array *pm_discover_plugins( const char* dirname, plugin_array *pl
 
     if ( dirname == NULL )
     {
-        dirname = ".";  // Use current directory as last resort
+        dirname = ".";  // Use current directory as last resort TODO: use 
     }
     if ( plugins == NULL )
     {
-        /* calloc  initialisez  the structure to 0, NULL*/
+        /* calloc  initializes  the structure to 0, NULL*/
         plugins = calloc( 1, sizeof(plugin_array) );
     }
 

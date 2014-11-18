@@ -30,14 +30,15 @@
 static int waveman_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]);
 
 r_device waveman = {
-    /* .id             = */ 3,
-    /* .name           = */ "Silvercrest Remote Control",
+    /* .id             = */ 6,
+    /* .name           = */ "Waveman Switch Transmitter",
     /* .modulation     = */ OOK_PWM_P,
-    /* .short_limit    = */ 600/4,
-    /* .long_limit     = */ 5000/4,
-    /* .reset_limit    = */ 15000/4,
+    /* .short_limit    = */ 1000/4,
+    /* .long_limit     = */ 8000/4,
+    /* .reset_limit    = */ 30000/4,
     /* .json_callback  = */ &waveman_callback,
 };
+
 
 rtl_433_plugin_t plugin =
 {

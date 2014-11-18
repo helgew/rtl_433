@@ -1,3 +1,8 @@
+/*
+ * TODO: Licence header
+ * Author: TODO: your name
+ */
+
 #include <stdint.h> // for uint8_t
 #include <stdio.h>  // fprintf
 #include <string.h> // memcmp
@@ -9,9 +14,18 @@
 #include "rtl_433_plugin.h" // For application plugin descriptor
 
 /**
- *  Provide information about the protocol and compatible transmitter devices here
+ *  TODO: Provide information about the protocol and compatible transmitter devices here
  *  Add references (to hopefully permanent URL's) where more detailed info can be found
  *  Note that this info should be picked up by Doxygen to provide documentation for this module
+ */
+
+/* Note for developers: add your callback to the CMakeLists.txt file in this directory
+ *    then cmake and make the project
+ * This is the template for a plugin that handles a single device type with its unique timing limits
+ *    if other devices use the same 'protocol' so that the callback function can be used for other devices
+ *    but with other timings, then use the plugin_multiple.c template in this directory.
+ *    Also if you want to provide multiple related plugins from within a single shared object you can use
+ *    the plugin_multiple.c template
  */
 
 

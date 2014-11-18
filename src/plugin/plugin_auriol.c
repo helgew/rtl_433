@@ -40,12 +40,10 @@ rtl_433_plugin_t plugin =
         .model       = "Auriol Temperature Station",
         .version     = 1
     },
-    .callback_p = auriol_callback,
     .r_device_p = &auriol
 };
 
-__attribute__ ((visibility ("default")))
-extern void *get_plugin()
+VISIBLE extern void *get_plugin()
 {
     return &plugin;
 }
@@ -62,8 +60,8 @@ static int auriol_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     char buffer[25];
     struct tm* tm_info;
 
-// TODO remove
-    fprintf(stderr, "App: %s, type: %s, model: %s, version: %d\n",
+// TODO make DEBUG
+    fprintf(stderr, "Called plugin callback for App: %s, type: %s, model: %s, version: %d\n",
         plugin.plugin_desc.application,
         plugin.plugin_desc.type,
         plugin.plugin_desc.model,

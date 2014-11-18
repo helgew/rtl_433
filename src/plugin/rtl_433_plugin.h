@@ -30,7 +30,6 @@ typedef struct {
 
 typedef struct rtl_433_plugin_t {
     plugin_descriptor  plugin_desc;
-    callback_t         callback_p;
     r_device          *r_device_p;
 } rtl_433_plugin_t;
 
