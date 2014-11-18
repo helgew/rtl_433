@@ -26,4 +26,7 @@ VISIBLE void pm_show_plugins(  plugin_array *plugins );
 
 VISIBLE void pm_show_plugin (  plugin_descriptor  *plugin );
 
+VISIBLE int pm_unload_plugins();
+
+
 #endif

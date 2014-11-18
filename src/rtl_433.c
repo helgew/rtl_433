@@ -1633,8 +1633,10 @@ int main(int argc, char **argv)
     device_count = rtlsdr_get_device_count();
     if (!device_count) {
         fprintf(stderr, "No supported devices found.\n");
-        if (!test_mode_file)
+        if (!test_mode_file) {
+            pm_unload_plugins();
             exit(1);
+        }
     }
 
     fprintf(stderr, "Found %d device(s):\n", device_count);

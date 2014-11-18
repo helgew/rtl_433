@@ -24,6 +24,7 @@
 //
 typedef void* (*PluginInitFunc)();
 
+static plugin_array *my_plugins;
 
 int load_plugins ( const char *plugin_name, const char *plugin_path, plugin_array *plugins );
 
@@ -85,6 +86,8 @@ VISIBLE plugin_array *pm_discover_plugins( const char* dirname, plugin_array *pl
     if ( dir ) closedir( dir );
     if ( full_path ) free( full_path );
 //  TODO: ceate real plugin admin
+    
+    my_plugins = plugins;
     return plugins;
 }
 
@@ -106,7 +109,37 @@ void pm_show_plugin (  plugin_descriptor  *plugin )
         plugin->model,
         plugin->version );
 }
-//! param plugin_name   char pointer containing the name of the plugin
+
+
+//! Register a library handle, or close all registered library handles
+//! libhandle: handle to a loaded library
+static int register_libhandle( void *libhandle )
+{
+    static void** libhandles = NULL;
+    static size_t nr_handles = 0;
+
+    if ( libhandle == NULL && libhandles != NULL )
+    {
+        size_t i;
+
+        for( i = 0; i < nr_handles; i++ )
+        {
+            dlclose(libhandles[i]);
+        }
+        free(libhandles);
+    }
+    else
+    {
+        nr_handles++;
+        libhandles = realloc(libhandles, nr_handles*sizeof(void*));
+        libhandles[nr_handles-1]=libhandle;
+    }
+
+    return nr_handles;
+
+}
+
+//! param plugin_name   char pointer containing the name of the plugin library file
 //! param plugin_path   char pointer containing the path where the plugin to be loaded can be found
 //! param plugins       pointer to a plugin array to which to add the plugins in the plugin library file
 //! return              the number of plugins added to the plugin array
@@ -119,7 +152,7 @@ int load_plugins( const char *plugin_name, const char *plugin_path, plugin_array
     void* libhandle = dlopen( plugin_path, RTLD_LAZY );
     if ( ! libhandle )
     {
-        fprintf ( stderr, "Can not open plugin '%s' at '%s' (cause: %s)\n",
+        fprintf ( stderr, "Can not open plugin library '%s' at '%s' (cause: %s)\n",
             plugin_name, plugin_path, dlerror() );
         return 0;
     }
@@ -154,3 +187,19 @@ int load_plugins( const char *plugin_name, const char *plugin_path, plugin_array
 
 }
 
+VISIBLE int pm_unload_plugins( )
+{
+    void *plugin;
+    int i;
+    // TODO: Call unload function of plugin
+
+    //for( i = 0; i < my_plugins->count; i-- )
+    //{
+    //     plugin = my_plugins->plugins[i];
+    //}
+    free(my_plugins->plugins);
+
+    // Close the libhandles and free the admin
+    register_libhandle(NULL);
+    return 0;
+}
