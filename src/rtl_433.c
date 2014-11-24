@@ -798,7 +798,11 @@ sighandler(int signum)
 #else
 static void sighandler(int signum)
 {
-    fprintf(stderr, "Signal caught, exiting!\n");
+    if (signum == SIGPIPE) {
+        signal(SIGPIPE,SIG_IGN);
+    } else {
+        fprintf(stderr, "Signal caught, exiting!\n");
+    }
     do_exit = 1;
     rtlsdr_cancel_async(dev);
 }
@@ -1268,13 +1272,13 @@ static void pwm_d_decode(struct dm_state *demod, struct protocol_state* p, int16
         if (p->start_c) p->sample_counter++; // samples within a packet ?
         if (p->pulse_distance && (buf[i] > demod->level_limit)) { // end of inter-pulse pause
             if (p->sample_counter < p->short_limit) {
-//printf("d0: %d\n", p->sample_counter);
+printf("d0: %d ", p->sample_counter);
                 demod_add_bit(p, 0);
             } else if (p->sample_counter < p->long_limit) {
                 demod_add_bit(p, 1);
-//printf("d1: %d\n", p->sample_counter);
+printf("d1: %d ", p->sample_counter);
             } else {
-//printf("dn: %d\n", p->sample_counter);
+printf("dn: %d\n", p->sample_counter);
                 demod_next_bits_packet(p);
                 p->pulse_count    = 0;
                 p->sample_counter = 0;

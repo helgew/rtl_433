@@ -76,7 +76,7 @@ static int auriol_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 
     /* FIXME validate the received message better, figure out crc so we can prevent false positives */
     notnul = (uint32_t*)&bb[1][0];
-    if ( *notnul != 0 && bb[0][0] == 0 && bb[1][0] != 0 &&
+    if ( bb[1][4] == 0 && *notnul != 0 && bb[0][0] == 0 && bb[1][0] != 0 &&
          bb[1][0] == bb[2][0] && bb[2][0] == bb[3][0] && bb[3][0] == bb[4][0] &&
          bb[4][0] == bb[5][0] && bb[5][0] == bb[6][0] && bb[6][0] == bb[7][0] ) {
         for( i = 1; i < 8; i++)
