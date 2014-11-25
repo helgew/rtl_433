@@ -1289,10 +1289,18 @@ printf("dn: %d\n", p->sample_counter);
             p->start_c    = 0;
             p->sample_counter = 0;
             p->pulse_distance = 0;
-            if (p->callback)
-                events+=p->callback(p->bits_buffer);
-            else
+            if (p->callback) {
+                int hit;
+                hit = p->callback(p->bits_buffer);
+                events += hit;
+#ifdef USE_PLUGINS
+                if (debug_output && hit)
+                    debug_callback(demod->f_buf);
+#endif
+            }
+            else {
                 demod_print_bits_packet(p);
+            }
 
             demod_reset_bits_packet(p);
         }
@@ -1450,10 +1458,6 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
                     default:
                         fprintf(stderr, "Unknown modulation %d in protocol!\n", demod->r_devs[i]->modulation);
                 }
-#ifdef USE_PLUGINS
-                if (debug_output)
-                    debug_callback(demod->f_buf);
-#endif
             }
         }
 
@@ -1533,7 +1537,7 @@ int main(int argc, char **argv)
     demod->level_limit      = DEFAULT_LEVEL_LIMIT;
 
 
-    while ((opt = getopt(argc, argv, "x:z:p:Dtam:r:c:l:d:f:g:s:b:n:S:P::")) != -1) {
+    while ((opt = getopt(argc, argv, "x:z:p:Dtam:r:c:l:d:f:g:s:b:n:S:P:")) != -1) {
         switch (opt) {
         case 'd':
             dev_index = atoi(optarg);
