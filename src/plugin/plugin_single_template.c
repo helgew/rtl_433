@@ -20,10 +20,11 @@
  */
 
 /* Note for developers: add your callback to the CMakeLists.txt file in this directory
- *    then cmake and make the project
+ *    then 'cmake' and 'make' the project
  * This is the template for a plugin that handles a single device type with its unique timing limits
- *    if other devices use the same 'protocol' so that the callback function can be used for other devices
- *    but with other timings, then use the plugin_multiple.c template in this directory.
+ *    if other devices use the same 'protocol' (i.e. message format) so that the callback function
+ *    can be used for other devices but with other timings, or another PWM decoder, then use the
+ *    plugin_multiple.c template in this directory.
  *    Also if you want to provide multiple related plugins from within a single shared object you can use
  *    the plugin_multiple.c template
  */
@@ -41,11 +42,15 @@
 
 /* Function declarations */
 
+/* TODO: Replace the pattern xxxx with the name for your plugin, note that name conflicts don't matter 
+ *    as long as the library file for your plugin is unique
+ */
 static int xxxx_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]);
 
+/* TODO: set the right PWM decoder, adjust the short, long and reset limits for your plugin */
 r_device xxxx = {
-    /* .id             = */ 3,
-    /* .name           = */ "Silvercrest Remote Control",
+    /* .id             = */ 100,
+    /* .name           = */ "Your Plugin Name",
     /* .modulation     = */ OOK_PWM_P,
     /* .short_limit    = */ 600/4,
     /* .long_limit     = */ 5000/4,
@@ -53,6 +58,20 @@ r_device xxxx = {
     /* .json_callback  = */ &xxxx_callback,
 };
 
+/* TODO set 'type' and 'model' so that it can be used by users to select your plugin, or multiple plugins using wildcards / regexps,
+ * A first proposal for valid 'type' values:
+ * environment.weather: for weather stations containing multiple sensors 
+ * environment.temperature: for temperature sensors 
+ * environment.gas.* for gas sensors, i.e:
+ * environment.gas.co: Carbon monoxide sensor
+ * environment.gas.co2: Carbon dioxide sensor
+ * environment.smoke: Smoke detector
+ * remote.button: for button events on remotes (or doorbells)
+ * The above 'taxanomy' is a first try, please comment on it if you can come up with a better definition
+ *
+ * For model just use the brand and model of your sensor / remote / device, off course a plugin may be valid for
+ * multiple brands or models, but we need to have some indication of its identity
+ */
 rtl_433_plugin_t plugin =
 {
     .plugin_desc = {
@@ -64,20 +83,10 @@ rtl_433_plugin_t plugin =
     .r_device_p = &xxxx
 };
 
-VISIBLE extern void *get_plugin()
-{
-    static int returned = 0;
-    if ( returned == 0)
-    {
-        returned = 1;
-        return &plugin;
-    }
-    return NULL;
 
-}
+/* TODO: put your callback function here, remove the template below, or adjust it */
 static int xxxx_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
-
-// TODO remove or replace by debug output call
+// MYTODO remove or replace by debug output call
     fprintf(stderr, "Called callback plugin for App: %s, type: %s, model: %s, version: %d\n",
         plugin.plugin_desc.application,
         plugin.plugin_desc.type,
@@ -93,3 +102,14 @@ static int xxxx_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
     return 0;
 }
 
+/* No need to change this function */
+VISIBLE extern void *get_plugin()
+{
+    static int returned = 0;
+    if ( returned == 0)
+    {
+        returned = 1;
+        return &plugin;
+    }
+    return NULL;
+}
