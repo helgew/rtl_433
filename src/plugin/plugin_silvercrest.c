@@ -22,7 +22,9 @@
 
 static int silvercrest_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]);
 
-r_device silvercrest = {
+
+r_device devices[] = {
+{
     /* .id             = */ 3,
     /* .name           = */ "Silvercrest Remote Control",
     /* .modulation     = */ OOK_PWM_P,
@@ -30,50 +32,60 @@ r_device silvercrest = {
     /* .long_limit     = */ 5000/4,
     /* .reset_limit    = */ 15000/4,
     /* .json_callback  = */ &silvercrest_callback,
-};
-
-/* TODO: Add generic_hx2262 */
-r_device generic_hx2262 = {
+},
+{
     /* .id             = */ 5,
-    /* .name           = */ "Window/Door sensor",
+    /* .name           = */ "HX2262 Window/Door sensor",
     /* .modulation     = */ OOK_PWM_P,
     /* .short_limit    = */ 1300/4,
     /* .long_limit     = */ 10000/4,
     /* .reset_limit    = */ 40000/4,
     /* .json_callback  = */ &silvercrest_callback,
+}
 };
 
-rtl_433_plugin_t plugin =
-{
+
+rtl_433_plugin_t plugin[] = {
+  {
     .plugin_desc = {
         .application = "rtl_433",
         .type        = "remote.buttons",
         .model       = "Silvervrest Remote",
         .version     = 1
     },
-    .r_device_p = &silvercrest
+    .r_device_p = &(devices[0])
+  },
+  {
+    .plugin_desc = {
+        .application = "rtl_433",
+        .type        = "remote.buttons",
+        .model       = "HX2262 Window Door Sensor",
+        .version     = 1
+    },
+    .r_device_p = &(devices[1])
+  }
 };
 
 
 VISIBLE extern void *get_plugin()
 {
-    static int returned = 0;
-    if ( returned == 0)
+    static int cnt = 0;
+    // TODO: return each record in order
+    if ( cnt < 2 )
     {
-        returned = 1;
-        return &plugin;
+        return &(plugin[cnt++]);
     }
     return NULL;
-
 }
+
 static int silvercrest_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
 
 // TODO remove
     fprintf(stderr, "App: %s, type: %s, model: %s, version: %d\n",
-        plugin.plugin_desc.application,
-        plugin.plugin_desc.type,
-        plugin.plugin_desc.model,
-        plugin.plugin_desc.version );
+        plugin[0].plugin_desc.application,
+        plugin[0].plugin_desc.type,
+        plugin[0].plugin_desc.model,
+        plugin[0].plugin_desc.version );
 
     /* FIXME validate the received message better */
     if (bb[1][0] == 0xF8 &&
