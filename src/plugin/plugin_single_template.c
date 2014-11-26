@@ -47,7 +47,13 @@
  */
 static int xxxx_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]);
 
-/* TODO: set the right PWM decoder, adjust the short, long and reset limits for your plugin */
+/* TODO: set the right PWM decoder, adjust the short, long and reset limits for your plugin 
+ * NOTE: The current timings are based on a sampling rate of 250000 Hz
+ * (was originally 10240000 Hz? hence the divide by 4)
+ * HOWEVER: we plan on changing this to a unit of usecs in the future, this will make the 
+ * limits independent of the sampling rate used and allows addaption of the sampling rate
+ * This still has to be implemented, all plugins that are part of this repository will be adapted
+ */
 r_device xxxx = {
     /* .id             = */ 100,
     /* .name           = */ "Your Plugin Name",

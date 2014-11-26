@@ -82,6 +82,66 @@ static int x10_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
         plugin.plugin_desc.model,
         plugin.plugin_desc.version );
 
+    char *x10_function[] = {
+        "All Units Off",
+        "All Lights On",
+        "On",
+        "Off",
+        "Dim",
+        "Bright",
+        "All Lights Off",
+        "Extended Code",
+        "Hail Request",
+        "Hail Acknowledge",
+        "Pre-set Dim (1)",
+        "Pre-set Dim (2)",
+        "Extended Data Transfer",
+        "Status On",
+        "Status Off",
+        "Status Request"
+    };
+
+    const unsigned long HouseCode[] =
+    {
+      0x6000, /* a */
+      0x7000, /* b */
+      0x4000, /* c */
+      0x5000, /* d */
+      0x8000, /* e */
+      0x9000, /* f */
+      0xa000, /* g */
+      0xb000, /* h */
+      0xe000, /* i */
+      0xf000, /* j */
+      0xc000, /* k */
+      0xd000, /* l */
+      0x0000, /* m */
+      0x1000, /* n */
+      0x2000, /* o */
+      0x3000  /* p */
+    } ;
+
+    const int maxHouseCode = sizeof(HouseCode) / sizeof(HouseCode[0]) ;
+
+    const unsigned long UnitCode[] =
+    {
+      0x0000, /* 1 */
+      0x0010, /* 2 */
+      0x0008, /* 3 */
+      0x0018, /* 4 */
+      0x0040, /* 5 */
+      0x0050, /* 6 */
+      0x0048, /* 7 */
+      0x0058, /* 8 */
+      0x0400, /* 9 */
+      0x0410, /* 10 */
+      0x0408, /* 11 */
+      0x0400, /* 12 */
+      0x0440, /* 13 */
+      0x0450, /* 14 */
+      0x0448, /* 15 */
+      0x0458  /* 16 */
+    } ;
 // TODO: remove
     /* validate */
     if (((bb[1][0] + bb[1][1]) == 0xff) && ((bb[1][2] + bb[1][3]) == 0xff ))
@@ -89,8 +149,10 @@ static int x10_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS]) {
         uint8_t byte1, byte2;
         byte1 = bb[1][0];
         byte2 = bb[1][2];
+        unsigned long fullcode = byte1 << 8 | byte2;
 
         fprintf(stderr, "X10: id = %02x code=%02x\n", byte1, byte2);
+        fprintf(stderr, "X10: long id = %02lx \n", fullcode );
         fprintf(stderr, "byte1: ");
         printbytebits( byte1 );
         fprintf(stderr, "\nbyte2: ");

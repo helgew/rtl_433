@@ -36,9 +36,9 @@ r_device acurite5n1 = {
     /* .id             = */ 10,
     /* .name           = */ "Acurite 5n1 Weather Station",
     /* .modulation     = */ OOK_PWM_P,
-    /* .short_limit    = */ 75,
-    /* .long_limit     = */ 220,
-    /* .reset_limit    = */ 20000,
+    /* .short_limit    = */ 235,
+    /* .long_limit     = */ 500,
+    /* .reset_limit    = */ 2000,
     /* .json_callback  = */ &acurite5n1_callback,
 };
 
