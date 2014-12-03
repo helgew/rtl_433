@@ -53,6 +53,7 @@ add_library(rtlsdr_static STATIC
 )
 
 add_subdirectory(plugin)
+add_subdirectory(timer)
 
 if(WIN32)
 add_library(libgetopt_static STATIC
