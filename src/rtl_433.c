@@ -77,6 +77,7 @@
 #ifdef USE_PLUGINS
 #include "plugin/plugin.h"
 #include "plugin/rtl_433_plugin.h"
+#include "timer/timer.h"
 #endif
 
 
@@ -942,6 +943,7 @@ static void register_protocol(struct dm_state *demod, r_device *t_dev) {
         fprintf(stderr, "short: %d, long: %d, reset: %d\n", t_dev->short_limit, t_dev->long_limit, t_dev->reset_limit );
     //}
 
+    /* TODO: allocate dynamically */
     if (demod->r_dev_num > MAX_PROTOCOLS)
         fprintf(stderr, "Max number of protocols reached %d\n",MAX_PROTOCOLS);
 }
@@ -1448,6 +1450,11 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
     struct dm_state *demod = ctx;
     uint16_t* sbuf = (uint16_t*) buf;
     int i;
+    diff_timer_t *timerall, *timerplugin;
+    timerall = diff_timer_create();
+    timerplugin = diff_timer_create();
+
+
     if (demod->file || !demod->save_data) {
         if (do_exit || do_exit_async)
             return;
@@ -1477,7 +1484,9 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
         if (demod->analyze) {
             pwm_analyze(demod, demod->f_buf, len/2);
         } else {
+            diff_timer_start(timerall);
             for (i=0 ; i<demod->r_dev_num ; i++) {
+                diff_timer_start(timerplugin);
                 switch (demod->r_devs[i]->modulation) {
                     case OOK_PWM_D:
                         pwm_d_decode(demod, demod->r_devs[i], demod->f_buf, len/2);
@@ -1488,7 +1497,11 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
                     default:
                         fprintf(stderr, "Unknown modulation %d in protocol!\n", demod->r_devs[i]->modulation);
                 }
+                diff_timer_stop(timerplugin);
+                diff_timer_show(timerplugin,  "plugin" );
             }
+            diff_timer_stop(timerall);
+            diff_timer_show(timerall, "all");
         }
 
         if (demod->save_data) {

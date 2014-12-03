@@ -28,6 +28,11 @@ add_library(rtlsdr_shared SHARED
     tuner_fc2580.c
     tuner_r820t.c
     plugin/plugin.c
+    timer/timer.c
+)
+
+add_library(timer_shared SHARED
+    timer/timer.c
 )
 
 set(CMAKE_EXE_LINKER_FLAGS "-rdynamic")
@@ -50,6 +55,7 @@ add_library(rtlsdr_static STATIC
     tuner_fc2580.c
     tuner_r820t.c
     plugin/plugin.c
+    timer/timer.c
 )
 
 add_subdirectory(plugin)
@@ -105,6 +111,7 @@ target_link_libraries(rtl_fm rtlsdr_shared
     ${CMAKE_DL_LIBS}
 )
 target_link_libraries(rtl_433 rtlsdr_shared
+    stimer
     ${LIBUSB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${CMAKE_DL_LIBS}
