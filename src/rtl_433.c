@@ -1008,8 +1008,10 @@ static void classify_signal() {
                 }
             }
         }
-        min_new = min_new / count_min;
-        max_new = max_new / count_max;
+        if (count_min != 0 && count_max != 0) {
+            min_new = min_new / count_min;
+            max_new = max_new / count_max;
+        }
 
         delta = (min - min_new)*(min - min_new) + (max - max_new)*(max - max_new);
         min = min_new;
@@ -1292,14 +1294,14 @@ static void pwm_d_decode(struct dm_state *demod, struct protocol_state* p, int16
 
     for (i=0 ; i<len ; i++) {
         if (buf[i] > demod->level_limit) { // We're in a pulse and a packet is started?
-            p->pulse_count = 1;
-            p->start_c = 1;
+            p->pulse_count = 1;    // This is the first pulse (i.e. after reset)
+            p->start_c = 1;        // We are in a message
         }
         if (p->pulse_count && (buf[i] < demod->level_limit)) { // end pulse, start the inter-pulse width distance
-            p->pulse_length = 0;
-            p->pulse_distance = 1;
-            p->sample_counter = 0;
-            p->pulse_count = 0;
+            p->pulse_length = 0;   // reset the pulse length to zero
+            p->pulse_distance = 1; // start inter-pulse distance
+            p->sample_counter = 0; // samples within a pulse or inter-pulse pause
+            p->pulse_count = 0;    // ???
         }
         if (p->start_c) p->sample_counter++; // samples within a packet ?
         if (p->pulse_distance && (buf[i] > demod->level_limit)) { // end of inter-pulse pause
@@ -1450,9 +1452,9 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
     struct dm_state *demod = ctx;
     uint16_t* sbuf = (uint16_t*) buf;
     int i;
-    diff_timer_t *timerall, *timerplugin;
-    timerall = diff_timer_create();
-    timerplugin = diff_timer_create();
+    //diff_timer_t *timerall, *timerplugin;
+    //timerall = diff_timer_create();
+    //timerplugin = diff_timer_create();
 
 
     if (demod->file || !demod->save_data) {
@@ -1484,9 +1486,9 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
         if (demod->analyze) {
             pwm_analyze(demod, demod->f_buf, len/2);
         } else {
-            diff_timer_start(timerall);
+            //diff_timer_start(timerall);
             for (i=0 ; i<demod->r_dev_num ; i++) {
-                diff_timer_start(timerplugin);
+                //diff_timer_start(timerplugin);
                 switch (demod->r_devs[i]->modulation) {
                     case OOK_PWM_D:
                         pwm_d_decode(demod, demod->r_devs[i], demod->f_buf, len/2);
@@ -1497,11 +1499,11 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx)
                     default:
                         fprintf(stderr, "Unknown modulation %d in protocol!\n", demod->r_devs[i]->modulation);
                 }
-                diff_timer_stop(timerplugin);
-                diff_timer_show(timerplugin,  "plugin" );
+                //diff_timer_stop(timerplugin);
+                //diff_timer_show(timerplugin,  "plugin" );
             }
-            diff_timer_stop(timerall);
-            diff_timer_show(timerall, "all");
+            //diff_timer_stop(timerall);
+            //diff_timer_show(timerall, "all");
         }
 
         if (demod->save_data) {

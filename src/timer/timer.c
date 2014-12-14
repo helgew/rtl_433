@@ -48,7 +48,7 @@ int diff_timer_show ( diff_timer_t *timerp, const char *descr ) {
         usecs = 1000000000L - usecs;
     }
 
-    fprintf( stderr, "%s: elapsed: %ld.%09ld secs\n", descr, secs, usecs );
+    fprintf( stderr, "%s: elapsed: %ld.%06ld secs\n", descr, secs, usecs );
 
     return 0;
 }
