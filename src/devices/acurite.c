@@ -49,16 +49,17 @@ static float acurite_getTemp(uint8_t highbyte, uint8_t lowbyte) {
 	return temp;
 }
 
-static double acurite_getWindSpeed(uint8_t highbyte, uint8_t lowbyte) {
+static float acurite_getWindSpeed(uint8_t highbyte, uint8_t lowbyte) {
 	// range: 0 to 159 kph
 	int highbits = (highbyte & 0x7F) << 3;
 	int lowbits = (lowbyte & 0x7F) >> 4;
-	double speed = highbits | lowbits;
-	// speed formula according to empirical data
+	float speed = highbits | lowbits;
+	// speed in m/s formula according to empirical data
 	if (speed > 0) {
 		speed = speed * 0.23 + 0.28;
 	}
-	return speed;
+	float kph = speed * 60 * 60 / 1000;
+	return kph;
 }
 
 static float acurite_getWindDirection(uint8_t byte) {
@@ -103,7 +104,7 @@ static int acurite5n1_callback(uint8_t bb[BITBUF_ROWS][BITBUF_COLS],
 			fprintf(stderr, "CRC OK\n");
 		}
 
-		fprintf(stderr, "wind speed: %0.2f m/s, ",
+		fprintf(stderr, "wind speed: %0.1f km/h, ",
 				acurite_getWindSpeed(buf[3], buf[4]));
 
 		int type = (buf[2] & 0x3F);
@@ -201,8 +202,8 @@ r_device acurite5n1 = {
 /* .id             = */10,
 /* .name           = */"Acurite 5n1 Weather Station",
 /* .modulation     = */OOK_PWM_P,
-/* .short_limit    = */70,
-/* .long_limit     = */240,
+/* .short_limit    = */250/4,
+/* .long_limit     = */1000/4,
 /* .reset_limit    = */21000,
 /* .json_callback  = */&acurite5n1_callback, };
 
