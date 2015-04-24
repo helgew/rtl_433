@@ -133,6 +133,7 @@ struct dm_state {
     int16_t* f_buf;
     int analyze;
     int debug_mode;
+    int ignore_known;
 
     /* Signal grabber variables */
     int signal_grabber;
@@ -155,6 +156,7 @@ void usage(r_device *devices) {
             "Usage:\t[-d device index (default: 0)]\n"
             "\t[-g gain (default: 0 for auto)]\n"
             "\t[-a analyze mode, print a textual description of the signal]\n"
+            "\t[-i ignore known signals from specified remote devices (use with -a)]\n"
             "\t[-t signal auto save, use it together with analyze mode (-a -t)\n"
             "\t[-l change the detection level used to determine pulses (0-3200) default: %i]\n"
             "\t[-f [-f...] receive frequency[s], default: %i Hz]\n"
@@ -920,9 +922,9 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx) {
         } else if (demod->debug_mode == 1) {
             memcpy(demod->f_buf, buf, len);
         }
-        if (demod->analyze) {
-            pwm_analyze(demod, demod->f_buf, len / 2);
-        } else {
+
+        int found_known = 0;
+        if (!demod->analyze || demod->ignore_known) {
             for (i = 0; i < demod->r_dev_num; i++) {
                 switch (demod->r_devs[i]->modulation) {
                     case OOK_PWM_D:
@@ -942,6 +944,11 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx) {
                 }
             }
         }
+
+        found_known = events;
+        if (demod->analyze && (! demod->ignore_known || ! found_known)) {
+            pwm_analyze(demod, demod->f_buf, len / 2);
+		}
 
         if (demod->save_data) {
             if (fwrite(demod->f_buf, 1, len >> demod->decimation_level, demod->file) != len >> demod->decimation_level) {
@@ -1006,7 +1013,7 @@ int main(int argc, char **argv) {
     demod->level_limit = DEFAULT_LEVEL_LIMIT;
 
 
-    while ((opt = getopt(argc, argv, "x:z:p:Dtam:r:c:l:d:f:g:s:b:n:S:R::")) != -1) {
+    while ((opt = getopt(argc, argv, "x:z:p:Dtaim:r:c:l:d:f:g:s:b:n:S:R::")) != -1) {
         switch (opt) {
             case 'd':
                 dev_index = atoi(optarg);
@@ -1038,6 +1045,9 @@ int main(int argc, char **argv) {
                 break;
             case 'a':
                 demod->analyze = 1;
+                break;
+            case 'i':
+                demod->ignore_known = 1;
                 break;
             case 'r':
                 test_mode_file = optarg;
@@ -1082,7 +1092,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (argc <= optind - 1) {
+    if (argc <= optind - 1 || (!demod->analyze && demod->ignore_known)) {
         usage(devices);
     } else {
         filename = argv[optind];
@@ -1213,6 +1223,13 @@ int main(int argc, char **argv) {
         fprintf(stderr, "a: %d %d\n", a[0], a[1]);
         fprintf(stderr, "b: %d %d\n", b[0], b[1]);
         exit(0);
+    }
+
+    if (demod->analyze) {
+        fprintf(stderr, "Running in analyze mode!\n");
+        if (demod->ignore_known) {
+            fprintf(stderr, "Ignoring known signals!\n");
+        }
     }
 
     /* Reset endpoint before we start reading from it (mandatory) */
