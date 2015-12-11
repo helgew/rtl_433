@@ -24,7 +24,6 @@
 
 static char time_str[LOCAL_TIME_BUFLEN];
 
-
 // Acurite 5n1 Wind direction values.
 // There are seem to be conflicting decodings.
 // It is possible there there are different versions
@@ -123,20 +122,6 @@ static int acurite_crc(uint8_t row[BITBUF_COLS], int cols) {
         return 0;
 }
 
-static int acurite_detect(uint8_t *pRow) {
-    int i;
-    if ( pRow[0] != 0x00 ) {
-        // invert bits due to wierd issue
-        for (i = 0; i < 8; i++)
-            pRow[i] = ~pRow[i] & 0xFF;
-        pRow[0] |= pRow[8];  // fix first byte that has mashed leading bit
-
-        if (acurite_crc(pRow, 7))
-            return 1;  // passes crc check
-    }
-    return 0;
-}
-
 // Temperature encoding for 5-n-1 sensor and possibly others
 static float acurite_getTemp (uint8_t highbyte, uint8_t lowbyte) {
     // range -40 to 158 F
@@ -156,13 +141,6 @@ static int acurite_getWindSpeed (uint8_t highbyte, uint8_t lowbyte) {
     int lowbits = ( lowbyte & 0x70 ) >> 4;
     int speed = highbits | lowbits;
     return speed;
-}
-
-// For the 5n1 based on a linear/circular encoding.
-static float acurite_getWindDirection (uint8_t byte) {
-    // 16 compass points, ccw from (NNW) to 15 (N)
-    int direction = byte & 0x0F;
-    return acurite_winddirections[direction];
 }
 
 static int acurite_getHumidity (uint8_t byte) {
@@ -223,65 +201,6 @@ static int acurite_5n1_getMessageCaught(uint8_t byte){
 //         part of the message type. So far these appear to always be 1
 static int acurite_5n1_getBatteryLevel(uint8_t byte){
     return (byte & 0x40) >> 6;
-}
-
-
-int acurite5n1_callback(bitbuffer_t *bitbuffer) {
-    // acurite 5n1 weather sensor decoding for rtl_433
-    // Jens Jensen 2014
-    bitrow_t *bb = bitbuffer->bb;
-    int i;
-    uint8_t *buf = NULL;
-    // run through rows til we find one with good crc (brute force)
-    for (i=0; i < BITBUF_ROWS; i++) {
-        if (acurite_detect(bb[i])) {
-            buf = bb[i];
-            break; // done
-        }
-    }
-
-    if (buf) {
-        // decode packet here
-        if (debug_output) {
-	    fprintf(stdout, "Detected Acurite 5n1 sensor, %d bits\n",bitbuffer->bits_per_row[1]);
-            for (i=0; i < 8; i++)
-                fprintf(stdout, "%02X ", buf[i]);
-            fprintf(stdout, "CRC OK\n");
-        }
-
-        if ((buf[2] & 0x0F) == 1) {
-            // wind speed, wind direction, rainfall
-
-            float rainfall = 0.00;
-            int raincounter = acurite_getRainfallCounter(buf[5], buf[6]);
-            if (acurite_raincounter > 0) {
-                // track rainfall difference after first run
-                rainfall = ( raincounter - acurite_raincounter ) * 0.01;
-            } else {
-                // capture starting counter
-                acurite_raincounter = raincounter;
-            }
-
-            fprintf(stdout, "wind speed: %d kph, ",
-                acurite_getWindSpeed(buf[3], buf[4]));
-            fprintf(stdout, "wind direction: %0.1f°, ",
-                acurite_getWindDirection(buf[4]));
-            fprintf(stdout, "rain gauge: %0.2f in.\n", rainfall);
-
-        } else if ((buf[2] & 0x0F) == 8) {
-            // wind speed, temp, RH
-            fprintf(stdout, "wind speed: %d kph, ",
-                acurite_getWindSpeed(buf[3], buf[4]));
-            fprintf(stdout, "temp: %2.1f° F, ",
-                acurite_getTemp(buf[4], buf[5]));
-            fprintf(stdout, "humidity: %d%% RH\n",
-                acurite_getHumidity(buf[6]));
-        }
-    } else {
-    	return 0;
-    }
-
-    return 1;
 }
 
 static int acurite_rain_gauge_callback(bitbuffer_t *bitbuffer) {
@@ -625,17 +544,6 @@ static int acurite_986_callback(bitbuffer_t *bitbuf) {
 
     return 0;
 }
-
-r_device acurite5n1 = {
-    .name           = "Acurite 5n1 Weather Station",
-    .modulation     = OOK_PULSE_PWM_RAW,
-    .short_limit    = 70,
-    .long_limit     = 130,
-    .reset_limit    = 200,
-    .json_callback  = &acurite5n1_callback,
-    .disabled       = 0,
-    .demod_arg      = 0,
-};
 
 r_device acurite_rain_gauge = {
     .name           = "Acurite 896 Rain Gauge",
